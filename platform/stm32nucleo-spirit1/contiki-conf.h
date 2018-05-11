@@ -38,15 +38,23 @@
 
 #define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE 8
 #define NULLRDC_CONF_802154_AUTOACK 0
-#define NETSTACK_CONF_FRAMER  framer_802154
-#define NETSTACK_CONF_NETWORK sicslowpan_driver
 
-#undef NETSTACK_CONF_RDC
+#ifndef NETSTACK_CONF_FRAMER
+#define NETSTACK_CONF_FRAMER  framer_802154
+#endif
+
+#ifndef NETSTACK_CONF_NETWORK
+#define NETSTACK_CONF_NETWORK sicslowpan_driver
+#endif
+
+#ifndef NETSTACK_CONF_RDC
 #define NETSTACK_CONF_RDC     nullrdc_driver
+#endif
 #define NETSTACK_RDC_HEADER_LEN 0
 
-#undef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC csma_driver
+#ifndef NETSTACK_CONF_MAC
+#define NETSTACK_CONF_MAC     csma_driver
+#endif
 #define NETSTACK_MAC_HEADER_LEN 0
 
 #define SICSLOWPAN_CONF_MAC_MAX_PAYLOAD \
