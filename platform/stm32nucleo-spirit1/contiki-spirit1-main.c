@@ -63,6 +63,7 @@
 #include "stdbool.h"
 #include "dev/button-sensor.h"
 #include "dev/radio-sensor.h"
+#include "dev/soc-rtc.h"
 /*---------------------------------------------------------------------------*/
 #if NETSTACK_CONF_WITH_IPV6
 #include "net/ipv6/uip-ds6.h"
@@ -137,6 +138,7 @@ main(int argc, char *argv[])
   leds_init();
 
   /* Initialize Contiki and our processes. */
+  soc_rtc_init();
   clock_init();
   ctimer_init();
   rtimer_init();

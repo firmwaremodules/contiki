@@ -6,7 +6,7 @@
 CONTIKI_CPU=$(CONTIKI)/cpu/arm/stm32l152
 
 # Source folders for contiki cpu files
-CONTIKI_CPU_DIRS =  . 
+CONTIKI_CPU_DIRS =  . dev
 
 # source files: proprietary sources for startup. Refer to CMSIS docs.
 PROP_SYS_ARCH_C = system_stm32l1xx.c
@@ -22,7 +22,9 @@ endif
 # source files: Contiki arch source files
 CONTIKI_CPU_ARCH=   watchdog.c                                \
                     rtimer-arch.c                             \
-                    clock.c				      
+                    clock.c                                   \
+                    soc-rtc.c
+
 
 ifdef GCC 
 CONTIKI_CPU_PORT=   syscalls.c                                  \
