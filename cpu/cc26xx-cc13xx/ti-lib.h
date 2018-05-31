@@ -116,6 +116,8 @@
 #define ti_lib_aon_rtc_inc_value_ch2_get(...)         AONRTCIncValueCh2Get(__VA_ARGS__)
 #define ti_lib_aon_rtc_capture_value_ch1_get(...)     AONRTCCaptureValueCh1Get(__VA_ARGS__)
 /*---------------------------------------------------------------------------*/
+
+#if 0 // Only applies to cc13x0/26x0 devices
 /* aon_wuc.h */
 #include "driverlib/aon_wuc.h"
 
@@ -141,6 +143,7 @@
 #define ti_lib_aon_wuc_recharge_ctrl_config_get(...)  AONWUCRechargeCtrlConfigGet(__VA_ARGS__)
 #define ti_lib_aon_wuc_osc_config(...)                AONWUCOscConfig(__VA_ARGS__)
 #define ti_lib_aon_wuc_jtag_power_off(...)            AONWUCJtagPowerOff(__VA_ARGS__)
+#endif
 /*---------------------------------------------------------------------------*/
 /* aux_adc.h */
 #include "driverlib/aux_adc.h"
@@ -162,6 +165,7 @@
 #define ti_lib_aux_adc_adjust_value_for_gain_and_offset(...)   AUXADCAdjustValueForGainAndOffset(__VA_ARGS__)
 #define ti_lib_aux_adc_unadjust_value_for_gain_and_offset(...) AUXADCUnadjustValueForGainAndOffset(__VA_ARGS__)
 /*---------------------------------------------------------------------------*/
+#if 0 // Only applies to cc13x0/26x0 devices
 /* aux_wuc.h */
 #include "driverlib/aux_wuc.h"
 
@@ -172,6 +176,7 @@
 #define ti_lib_aux_wuc_power_ctrl(...)     AUXWUCPowerCtrl(__VA_ARGS__)
 #define ti_lib_aux_wuc_freeze_enable(...)  AUXWUCFreezeEnable(__VA_ARGS__)
 #define ti_lib_aux_wuc_freeze_disable(...) AUXWUCFreezeDisable(__VA_ARGS__)
+#endif
 /*---------------------------------------------------------------------------*/
 /* cpu.h */
 #include "driverlib/cpu.h"
