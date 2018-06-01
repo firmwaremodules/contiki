@@ -1,3 +1,5 @@
 TI_XXWARE_PATH = lib/cc13x2-cc26x2-driverlib
 
+CFLAGS += -DCPU_FAMILY_CC26X2=1
+
 include $(CONTIKI_CPU)/Makefile.cc26x2-cc13x2

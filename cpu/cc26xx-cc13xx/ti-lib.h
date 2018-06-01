@@ -117,7 +117,7 @@
 #define ti_lib_aon_rtc_capture_value_ch1_get(...)     AONRTCCaptureValueCh1Get(__VA_ARGS__)
 /*---------------------------------------------------------------------------*/
 
-#if 0 // Only applies to cc13x0/26x0 devices
+#if CPU_FAMILY_CC26X0_CC13X0 // Only applies to cc13x0/26x0 devices
 /* aon_wuc.h */
 #include "driverlib/aon_wuc.h"
 
@@ -143,6 +143,36 @@
 #define ti_lib_aon_wuc_recharge_ctrl_config_get(...)  AONWUCRechargeCtrlConfigGet(__VA_ARGS__)
 #define ti_lib_aon_wuc_osc_config(...)                AONWUCOscConfig(__VA_ARGS__)
 #define ti_lib_aon_wuc_jtag_power_off(...)            AONWUCJtagPowerOff(__VA_ARGS__)
+#elif CPU_FAMILY_CC26X2_CC13X2
+/* Setup symbols to maintain compatibility with other components
+ * designed to use the legacy aux-ctrl APIs.
+ */
+#define AUX_WUC_MODCLKEN0_TIMER_EN                                  0x00000008
+#define AUX_WUC_MODCLKEN0_AIODIO1_EN                                0x00000004
+#define AUX_WUC_MODCLKEN0_SMPH_EN                                   0x00000001
+#define AUX_WUC_MODCLKEN0_AIODIO0_EN                                0x00000002
+#define AUX_WUC_MODCLKEN0_ANAIF_EN                                  0x00000010
+#define AUX_WUC_MODCLKEN0_TDC_EN                                    0x00000020
+#define AUX_WUC_MODCLKEN0_AUX_DDI0_OSC_EN                           0x00000040
+#define AUX_WUC_MODCLKEN0_AUX_ADI4_EN                               0x00000080
+
+#define AUX_WUC_SMPH_CLOCK      (AUX_WUC_MODCLKEN0_SMPH_EN)
+#define AUX_WUC_AIODIO0_CLOCK   (AUX_WUC_MODCLKEN0_AIODIO0_EN)
+#define AUX_WUC_AIODIO1_CLOCK   (AUX_WUC_MODCLKEN0_AIODIO1_EN)
+#define AUX_WUC_TIMER_CLOCK     (AUX_WUC_MODCLKEN0_TIMER_EN)
+#define AUX_WUC_ANAIF_CLOCK     (AUX_WUC_MODCLKEN0_ANAIF_EN)
+#define AUX_WUC_TDCIF_CLOCK     (AUX_WUC_MODCLKEN0_TDC_EN)
+#define AUX_WUC_OSCCTRL_CLOCK   (AUX_WUC_MODCLKEN0_AUX_DDI0_OSC_EN)
+#define AUX_WUC_ADI_CLOCK       (AUX_WUC_MODCLKEN0_AUX_ADI4_EN)
+#define AUX_WUC_MODCLK_MASK     0x000000FF
+#define AUX_WUC_TDC_CLOCK       0x00000100
+#define AUX_WUC_ADC_CLOCK       0x00000200
+#define AUX_WUC_REF_CLOCK       0x00000400
+#define AUX_WUC_CLOCK_OFF       0x00000000
+#define AUX_WUC_CLOCK_UNSTABLE  0x00000001
+#define AUX_WUC_CLOCK_READY     0x00000011
+#define AUX_WUC_CLOCK_HIFREQ    0x00000000
+#define AUX_WUC_CLOCK_LOFREQ    0x00000001
 #endif
 /*---------------------------------------------------------------------------*/
 /* aux_adc.h */
@@ -205,8 +235,20 @@
 #define ti_lib_chipinfo_get_device_id_hw_rev_code(...) ChipInfo_GetDeviceIdHwRevCode(__VA_ARGS__)
 #define ti_lib_chipinfo_get_chip_type(...)             ChipInfo_GetChipType(__VA_ARGS__)
 #define ti_lib_chipinfo_get_chip_family(...)           ChipInfo_GetChipFamily(__VA_ARGS__)
+
+
+#if CPU_FAMILY_CC26X0
 #define ti_lib_chipinfo_chip_family_is_cc26xx(...)     ChipInfo_ChipFamilyIsCC26xx(__VA_ARGS__)
+#elif CPU_FAMILY_CC26X2
+#define ti_lib_chipinfo_chip_family_is_cc26xx(...)     ChipInfo_ChipFamilyIs_CC13x2_CC26x2(__VA_ARGS__)
+#endif
+#if CPU_FAMILY_CC13X0
 #define ti_lib_chipinfo_chip_family_is_cc13xx(...)     ChipInfo_ChipFamilyIsCC13xx(__VA_ARGS__)
+#elif CPU_FAMILY_CC13X2
+#define ti_lib_chipinfo_chip_family_is_cc13xx(...)     ChipInfo_ChipFamilyIs_CC13x2_CC26x2(__VA_ARGS__)
+#endif
+
+
 #define ti_lib_chipinfo_get_hw_revision(...)           ChipInfo_GetHwRevision(__VA_ARGS__)
 #define ti_lib_chipinfo_hw_revision_is_1_0(...)        ChipInfo_HwRevisionIs_1_0(__VA_ARGS__)
 #define ti_lib_chipinfo_hw_revision_is_gteq_2_0(...)   ChipInfo_HwRevisionIs_GTEQ_2_0(__VA_ARGS__)
@@ -393,14 +435,27 @@
 #define ti_lib_pwr_ctrl_source_get(...)         PowerCtrlSourceGet(__VA_ARGS__)
 #define ti_lib_pwr_ctrl_reset_source_get(...)   PowerCtrlResetSourceGet(__VA_ARGS__)
 #define ti_lib_pwr_ctrl_reset_source_clear(...) PowerCtrlResetSourceClear(__VA_ARGS__)
+#if CPU_FAMILY_CC26X0_CC13X0
 #define ti_lib_pwr_ctrl_io_freeze_enable(...)   PowerCtrlIOFreezeEnable(__VA_ARGS__)
 #define ti_lib_pwr_ctrl_io_freeze_disable(...)  PowerCtrlIOFreezeDisable(__VA_ARGS__)
+#elif CPU_FAMILY_CC26X2_CC13X2
+#define ti_lib_pwr_ctrl_io_freeze_enable(...)   AONIOCFreezeEnable()
+#define ti_lib_pwr_ctrl_io_freeze_disable(...)  AONIOCFreezeDisable()
+#endif
+
 /*---------------------------------------------------------------------------*/
 /* rfc.h */
 #include "driverlib/rfc.h"
 
+#if CPU_FAMILY_CC26X0_CC13X0
 #define ti_lib_rfc_rtrim(...)                    RFCRTrim(__VA_ARGS__)
 #define ti_lib_rfc_adi3vco_ldo_voltage_mode(...) RFCAdi3VcoLdoVoltageMode(__VA_ARGS__)
+#else
+/* These appear to have no equivalent on the x2 parts */
+#define ti_lib_rfc_rtrim(...)                    
+#define ti_lib_rfc_adi3vco_ldo_voltage_mode(...) 
+#endif
+
 /*---------------------------------------------------------------------------*/
 /* sys_ctrl.h */
 #include "driverlib/sys_ctrl.h"

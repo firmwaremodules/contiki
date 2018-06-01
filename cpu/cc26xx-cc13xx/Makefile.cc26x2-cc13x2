@@ -21,6 +21,8 @@ TI_XXWARE_SRC = $(CPU_ABS_PATH)/$(TI_XXWARE_PATH)/driverlib
 TI_XXWARE_STARTUP_DIR = $(TI_XXWARE_PATH)/startup_files
 TI_XXWARE_STARTUP_SRCS = ccfg.c startup_gcc.c
 
+CFLAGS += -DCPU_FAMILY_CC26X2_CC13X2
+
 ### MODULES will add some of these to the include path, but we need to add
 ### them earlier to prevent filename clashes with Contiki core files
 CFLAGS += -I$(TI_XXWARE) -I$(CONTIKI)/$(TI_XXWARE_SRC)
@@ -71,7 +73,7 @@ CONTIKI_CPU_DIRS += ../arm/common/dbg-io
 
 ### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c soc-rtc.c uart.c
-CONTIKI_CPU_SOURCEFILES += contiki-watchdog.c aux-ctrl.c
+CONTIKI_CPU_SOURCEFILES += contiki-watchdog.c aux-ctrl-x2.c
 CONTIKI_CPU_SOURCEFILES += putchar.c ieee-addr.c batmon-sensor.c adc-sensor.c
 CONTIKI_CPU_SOURCEFILES += slip-arch.c slip.c cc26xx-uart.c lpm.c
 CONTIKI_CPU_SOURCEFILES += gpio-interrupt.c oscillators.c

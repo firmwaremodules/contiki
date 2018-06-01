@@ -68,9 +68,15 @@
 #include "driverlib/rf_prop_mailbox.h"
 #include "driverlib/rf_prop_cmd.h"
 /*---------------------------------------------------------------------------*/
+#if CPU_FAMILY_CC13X0
 /* CC13xxware patches */
 #include "rf_patches/rf_patch_cpe_genfsk.h"
 #include "rf_patches/rf_patch_rfe_genfsk.h"
+#elif CPU_FAMILY_CC13X2
+#include "rf_patches/rf_patch_mce_genfsk.h"
+#include "rf_patches/rf_patch_rfe_genfsk.h"
+#endif
+
 /*---------------------------------------------------------------------------*/
 #include "rf-core/smartrf-settings.h"
 /*---------------------------------------------------------------------------*/
@@ -924,10 +930,14 @@ on(void)
     rf_core_set_modesel();
 
     /* Apply patches to radio core */
+#if CPU_FAMILY_CC13X0
     rf_patch_cpe_genfsk();
     while(!HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFACKIFG));
     HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFACKIFG) = 0;
     rf_patch_rfe_genfsk();
+#elif CPU_FAMILY_CC13X2
+    /* CC13X2 TODO */
+#endif
 
     /* Initialize bus request */
     HWREG(RFC_DBELL_BASE + RFC_DBELL_O_RFACKIFG) = 0;

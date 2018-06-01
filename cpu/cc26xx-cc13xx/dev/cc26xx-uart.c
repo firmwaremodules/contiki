@@ -119,9 +119,17 @@ accessible(void)
   }
 
   /* Then check the 'run mode' clock gate */
+  
+#if CPU_FAMILY_CC26X0_CC13X0
   if(!(HWREG(PRCM_BASE + PRCM_O_UARTCLKGR) & PRCM_UARTCLKGR_CLK_EN)) {
     return false;
   }
+#elif CPU_FAMILY_CC26X0_CC13X0
+  /* x2 family has another UART - need to distinguish */
+  if (!(HWREG(PRCM_BASE + PRCM_O_UARTCLKGR) & PRCM_UARTCLKGR_CLK_EN_UART0)) {
+    return false;
+  }
+#endif
 
   return true;
 }
