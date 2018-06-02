@@ -124,7 +124,7 @@ accessible(void)
   if(!(HWREG(PRCM_BASE + PRCM_O_UARTCLKGR) & PRCM_UARTCLKGR_CLK_EN)) {
     return false;
   }
-#elif CPU_FAMILY_CC26X0_CC13X0
+#elif CPU_FAMILY_CC26X2_CC13X2
   /* x2 family has another UART - need to distinguish */
   if (!(HWREG(PRCM_BASE + PRCM_O_UARTCLKGR) & PRCM_UARTCLKGR_CLK_EN_UART0)) {
     return false;

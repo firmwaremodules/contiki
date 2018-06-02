@@ -109,9 +109,12 @@ lpm_shutdown(uint32_t wakeup_pin, uint32_t io_pull, uint32_t wake_on)
   for(i = AON_EVENT_MCU_WU0; i <= AON_EVENT_MCU_WU3; i++) {
     ti_lib_aon_event_mcu_wake_up_set(i, AON_EVENT_NONE);
   }
+
+#if CPU_FAMILY_CC26X0_CC13X0
   for(i = AON_EVENT_AUX_WU0; i <= AON_EVENT_AUX_WU2; i++) {
     ti_lib_aon_event_aux_wake_up_set(i, AON_EVENT_NONE);
   }
+#endif
 
   ti_lib_sys_ctrl_aon_sync();
 
@@ -143,11 +146,13 @@ lpm_shutdown(uint32_t wakeup_pin, uint32_t io_pull, uint32_t wake_on)
   oscillators_switch_to_hf_rc();
   oscillators_select_lf_rcosc();
 
+#if CPU_FAMILY_CC26X0_CC13X0
   /* Configure clock sources for MCU: No clock */
   ti_lib_aon_wuc_mcu_power_down_config(AONWUC_NO_CLOCK);
 
   /* Disable SRAM retention */
   ti_lib_aon_wuc_mcu_sram_config(0);
+#endif
 
   /*
    * Request CPU, SYSBYS and VIMS PD off.
@@ -156,22 +161,33 @@ lpm_shutdown(uint32_t wakeup_pin, uint32_t io_pull, uint32_t wake_on)
   ti_lib_prcm_power_domain_off(PRCM_DOMAIN_CPU | PRCM_DOMAIN_VIMS |
                                PRCM_DOMAIN_SYSBUS);
 
+#if CPU_FAMILY_CC26X0_CC13X0
   /* Request JTAG domain power off */
   ti_lib_aon_wuc_jtag_power_off();
+#endif
 
   /* Turn off AUX */
   aux_ctrl_power_down(true);
+
+#if CPU_FAMILY_CC26X0_CC13X0
   ti_lib_aon_wuc_domain_power_down_enable();
+#endif
+
+  // TODO figure out right thing ti do for x2
+#if CPU_FAMILY_CC26X0_CC13X0
 
   /*
    * Request MCU VD power off.
    * This will only happen when the CM3 enters deep sleep
    */
   ti_lib_prcm_mcu_power_off();
+#endif
 
+#if CPU_FAMILY_CC26X0_CC13X0
   /* Set MCU wakeup to immediate and disable virtual power off */
   ti_lib_aon_wuc_mcu_wake_up_config(MCU_IMM_WAKE_UP);
   ti_lib_aon_wuc_mcu_power_off_config(MCU_VIRT_PWOFF_DISABLE);
+#endif
 
   /* Latch the IOs in the padring and enable I/O pad sleep mode */
   ti_lib_pwr_ctrl_io_freeze_enable();
@@ -181,7 +197,9 @@ lpm_shutdown(uint32_t wakeup_pin, uint32_t io_pull, uint32_t wake_on)
   ti_lib_vims_mode_set(VIMS_BASE, VIMS_MODE_OFF);
 
   /* Enable shutdown and sync AON */
+#if CPU_FAMILY_CC26X0_CC13X0
   ti_lib_aon_wuc_shut_down_enable();
+#endif
   ti_lib_sys_ctrl_aon_sync();
 
   /* Deep Sleep */
@@ -204,8 +222,10 @@ wake_up(void)
   /* Sync so that we get the latest values before adjusting recharge settings */
   ti_lib_sys_ctrl_aon_sync();
 
+#if CPU_FAMILY_CC26X0_CC13X0
   /* Adjust recharge settings */
   ti_lib_sys_ctrl_adjust_recharge_after_power_down();
+#endif
 
   /*
    * Release the request to the uLDO
@@ -474,12 +494,14 @@ deep_sleep(void)
   /* Shut Down the AUX if the user application is not using it */
   aux_ctrl_power_down(false);
 
+#if CPU_FAMILY_CC26X0_CC13X0
   /* Configure clock sources for MCU: No clock */
   ti_lib_aon_wuc_mcu_power_down_config(AONWUC_NO_CLOCK);
 
   /* Full RAM retention. */
   ti_lib_aon_wuc_mcu_sram_config(MCU_RAM0_RETENTION | MCU_RAM1_RETENTION |
                                  MCU_RAM2_RETENTION | MCU_RAM3_RETENTION);
+#endif
 
   /*
    * Always turn off RFCORE, CPU, SYSBUS and VIMS. RFCORE should be off
@@ -488,11 +510,13 @@ deep_sleep(void)
   ti_lib_prcm_power_domain_off(PRCM_DOMAIN_RFCORE | PRCM_DOMAIN_CPU |
                                PRCM_DOMAIN_VIMS | PRCM_DOMAIN_SYSBUS);
 
+#if CPU_FAMILY_CC26X0_CC13X0
   /* Request JTAG domain power off */
   ti_lib_aon_wuc_jtag_power_off();
 
   /* Allow MCU and AUX powerdown */
   ti_lib_aon_wuc_domain_power_down_enable();
+#endif
 
   /* Configure the recharge controller */
   ti_lib_sys_ctrl_set_recharge_before_power_down(XOSC_IN_HIGH_POWER_MODE);

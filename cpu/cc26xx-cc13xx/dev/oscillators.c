@@ -105,7 +105,13 @@ oscillators_request_hf_xosc(void)
      * while for the XTAL to be ready so instead of performing the actual
      * switch, we return and we do other stuff while the XOSC is getting ready.
      */
+#if CPU_FAMILY_CC26X0_CC13X0
     ti_lib_osc_clock_source_set(OSC_SRC_CLK_MF | OSC_SRC_CLK_HF, OSC_XOSC_HF);
+#elif CPU_FAMILY_CC26X2_CC13X2
+    /* CLK_MF is not available as API argument */
+    ti_lib_osc_clock_source_set(OSC_SRC_CLK_HF, OSC_XOSC_HF);
+#endif
+
   }
 
   /* Release the OSC AUX consumer */
@@ -140,7 +146,12 @@ oscillators_switch_to_hf_rc(void)
   aux_ctrl_register_consumer(&osc);
 
   /* Set all clock sources to the HF RC Osc */
+#if CPU_FAMILY_CC26X0_CC13X0
   ti_lib_osc_clock_source_set(OSC_SRC_CLK_MF | OSC_SRC_CLK_HF, OSC_RCOSC_HF);
+#elif CPU_FAMILY_CC26X2_CC13X2
+  /* CLK_MF is not available as API argument */
+  ti_lib_osc_clock_source_set(OSC_SRC_CLK_HF, OSC_RCOSC_HF);
+#endif
 
   /* Check to not enable HF RC oscillator if already enabled */
   if(ti_lib_osc_clock_source_get(OSC_SRC_CLK_HF) != OSC_RCOSC_HF) {

@@ -30,7 +30,7 @@ CFLAGS += -I$(TI_XXWARE)/inc
 MODULES += $(TI_XXWARE_SRC)
 
 ### TODO CHANGE THIS
-LDSCRIPT = $(CONTIKI_CPU)/cc26xx.ld
+LDSCRIPT = $(TI_XXWARE)/linker_files/cc26x2r1f.lds
 
 CFLAGS += -mcpu=cortex-m4 -mthumb -mlittle-endian
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
