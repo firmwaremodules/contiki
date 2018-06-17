@@ -195,7 +195,7 @@
 #define ti_lib_aux_adc_adjust_value_for_gain_and_offset(...)   AUXADCAdjustValueForGainAndOffset(__VA_ARGS__)
 #define ti_lib_aux_adc_unadjust_value_for_gain_and_offset(...) AUXADCUnadjustValueForGainAndOffset(__VA_ARGS__)
 /*---------------------------------------------------------------------------*/
-#if 0 // Only applies to cc13x0/26x0 devices
+#if CPU_FAMILY_CC26X0_CC13X0 // Only applies to cc13x0/26x0 devices
 /* aux_wuc.h */
 #include "driverlib/aux_wuc.h"
 
