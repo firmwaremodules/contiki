@@ -36,11 +36,23 @@
 unsigned short node_id = 0;
 unsigned char node_mac[8];
 volatile uint32_t device_id[3];
+
+/* Set to indicate STM32L1 is CAT5 or higher. */
+#define CAT5_OR_HIGHER_NUCLEO 1
+
+#if CAT5_OR_HIGHER_NUCLEO
+/*---------------------------------------------------------------------------*/
+#define DEVICE_ID_REG0 (*((volatile uint32_t *) 0x1FF800D0))
+#define DEVICE_ID_REG1 (*((volatile uint32_t *) 0x1FF800D4))
+#define DEVICE_ID_REG2 (*((volatile uint32_t *) 0x1FF800E4))
+#else
 /*---------------------------------------------------------------------------*/
 #define DEVICE_ID_REG0  (*((volatile uint32_t *)0x1FF80050))
 #define DEVICE_ID_REG1  (*((volatile uint32_t *)0x1FF80054))
 #define DEVICE_ID_REG2  (*((volatile uint32_t *)0x1FF80064))
 /*---------------------------------------------------------------------------*/
+#endif
+
 void
 node_id_restore(void)
 {
