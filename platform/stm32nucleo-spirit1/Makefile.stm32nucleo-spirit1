@@ -40,6 +40,11 @@ else
   ${error }
 endif
 
+# Add target information to the build environment
+CFLAGS += -DST_TARGET=\"$(TARGET)\" \
+          -DST_BOARD=\"$(BOARD)\" \
+          -DST_SENSORBOARD=\"$(SENSORBOARD)\"
+
 
 
 #Currently we support only GCC

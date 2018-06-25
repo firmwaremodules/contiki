@@ -152,6 +152,30 @@ main(int argc, char *argv[])
   set_rime_addr();
   random_init(node_id);
 
+  printf("Starting " CONTIKI_VERSION_STRING "\n");
+  int hal_version = HAL_GetHalVersion();
+  printf("With HAL v%u.%u.%u.%u\n", 
+      (hal_version >> 24) & 0xff,
+      (hal_version >> 16) & 0xff,
+      (hal_version >> 8 ) & 0xff,
+      (hal_version >> 0 ) & 0xff);
+  printf(ST_TARGET " " ST_BOARD " " ST_SENSORBOARD "\n");
+  printf(" Net: ");
+  printf("%s\n", NETSTACK_NETWORK.name);
+  printf(" MAC: ");
+  printf("%s\n", NETSTACK_MAC.name);
+  printf(" RDC: ");
+  printf("%s", NETSTACK_RDC.name);
+
+  if (NETSTACK_RDC.channel_check_interval() != 0) {
+      printf(", Channel Check Interval: %u ticks",
+          NETSTACK_RDC.channel_check_interval());
+  }
+  printf("\n");
+
+  printf("Node id: %d\n", node_id);
+
+
   netstack_init();
   spirit_radio_driver.on();
 
