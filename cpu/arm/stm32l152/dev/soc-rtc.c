@@ -37,8 +37,9 @@
 #include "stm32l1xx_hal_rtc.h"
 #include "stm32l1xx_hal_rcc.h"
 
-
 #include <stdio.h>
+
+#define HWREG(x)  (*((volatile unsigned long *)(x)))
 
 /* Define the external low speed clock as the default */
 #if !defined(RTC_CLOCK_SOURCE_LSI) && !defined(RTC_CLOCK_SOURCE_LSE)
@@ -59,7 +60,12 @@
 #error "configure clock for STM32L152 RTC"
 #endif
 
-#define SOC_RTC_TEST 0
+#define DEBUG 0
+#if DEBUG
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
 
 
 /*---------------------------------------------------------------------------*/
@@ -112,11 +118,16 @@ RTC_AlarmConfig(uint32_t channel, rtimer_clock_t time)
     salarmstructure.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_NONE;
     salarmstructure.AlarmTime.TimeFormat = RTC_HOURFORMAT12_AM; /* don't care */
     salarmstructure.AlarmTime.Hours = 0; /* don't care */
-    salarmstructure.AlarmTime.Minutes = time * 60 * RTIMER_SECOND;
-    salarmstructure.AlarmTime.Seconds = time * RTIMER_SECOND;
-    salarmstructure.AlarmTime.SubSeconds = time;
+    salarmstructure.AlarmTime.Minutes = time / 60 / RTIMER_SECOND;
+    salarmstructure.AlarmTime.Seconds = time / RTIMER_SECOND;
+    salarmstructure.AlarmTime.SubSeconds = time % RTIMER_SECOND;
 
-    if (HAL_RTC_SetAlarm_IT(&RtcHandle, &salarmstructure, FORMAT_BCD) != HAL_OK)
+    PRINTF("soc-rtc: alarm set: %u:%u:%u\n",
+        (uint32_t)salarmstructure.AlarmTime.Minutes,
+        (uint32_t)salarmstructure.AlarmTime.Seconds,
+        (uint32_t)salarmstructure.AlarmTime.SubSeconds);
+
+    if (HAL_RTC_SetAlarm_IT(&RtcHandle, &salarmstructure, FORMAT_BIN) != HAL_OK)
     {
         /* Initialization Error */
         Error_Handler();
@@ -171,64 +182,13 @@ HAL_RTC_AlarmBEventCallback(RTC_HandleTypeDef *hrtc)
 void 
 RTC_Alarm_IRQHandler(void)
 {
+    PRINTF("soc-rtc: ALARM\n");
     HAL_RTC_AlarmIRQHandler(&RtcHandle);
 }
 
 
-/*---------------------------------------------------------------------------*/
-
-void
-soc_rtc_init(void)
+static void configure_rtc_clock()
 {
-
-#if 0
-    if (HAL_RTC_DeInit(&RtcHandle) != HAL_OK) {
-        Error_Handler();
-    }
-
-    //printf("\nRTC INIT: RTC_SYNCH_PREDIV=%d\n", RTC_SYNCH_PREDIV);
-
-    /* Re-configure the RTC for proper prescaler.
-     * the RTC is started in the
-     * stm32cube-lib submodule supplied by ST as a consequence
-     * of calling stm32cube_hal_init().
-     * Therefore, this function soc_rtc_init() must be called
-     * after stm32cube_hal_init().
-     *
-     * The RTC is used only to source RTIMER ticks
-     * and schedule RTIMER events as requested.
-     */
-
-    /* Alarm A (channel 0) is reserved for the system clock.
-     * Alarm B (channel 1) is reserved for the rtimer clock.
-     */
-
-     /*##-1- Configure the RTC peripheral #######################################*/
-    RtcHandle.Instance = RTC;
-
-    /* Configure RTC prescaler and RTC data registers */
-    /* RTC configured as follow:
-    - Hour Format    = Format 12
-    - Asynch Prediv  = Value according to source clock
-    - Synch Prediv   = Value according to source clock
-    - OutPut         = Output Disable
-    - OutPutPolarity = High Polarity
-    - OutPutType     = Open Drain */
-    RtcHandle.Init.HourFormat = RTC_HOURFORMAT_12;
-    RtcHandle.Init.AsynchPrediv = RTC_ASYNCH_PREDIV;
-    RtcHandle.Init.SynchPrediv = RTC_SYNCH_PREDIV;
-    RtcHandle.Init.OutPut = RTC_OUTPUT_DISABLE;
-    RtcHandle.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
-    RtcHandle.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
-
-    /* This normally calls HAL_RTC_MspInit for the */
-    if (HAL_RTC_Init(&RtcHandle) != HAL_OK)
-    {
-        /* Initialization Error */
-        Error_Handler();
-    }
-
-
     RCC_OscInitTypeDef        RCC_OscInitStruct;
     RCC_PeriphCLKInitTypeDef  PeriphClkInitStruct;
 
@@ -272,15 +232,75 @@ soc_rtc_init(void)
 #else
 #error Please select the RTC Clock source inside the stm32cube_hal_init.h file
 #endif /*RTC_CLOCK_SOURCE_LSE*/
+}
 
-    /*##-2- Enable RTC peripheral Clocks #######################################*/
-    /* Enable RTC Clock */
-    __HAL_RCC_RTC_ENABLE();
+/*---------------------------------------------------------------------------*/
 
-    HAL_NVIC_SetPriority(RTC_Alarm_IRQn, 0x0F, 0);
-    HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
+/*
+ * This initialization function is designed to work with the
+ * external stm32cube-lib subrepo.  It assumes that
+ * stm32cube_hal_init() in stm32cube-lib/stm32cube-prj/Src/stm32cube_hal_init.c
+ * is executed prior to this call.
+ *
+ * The main purpose of this function is to re-configure the
+ * RTC prescalers for maximum resolution (1/32768 s) and
+ * to synchronize the prescaler (subsecond counter) with the
+ * time count.
+ */
+void
+soc_rtc_init(void)
+{
+    RTC_DateTypeDef sDate;
+    RTC_TimeTypeDef sTime;
 
-#endif
+    RTC_HandleTypeDef *hrtc = &RtcHandle;
+
+    configure_rtc_clock();
+
+    HAL_PWR_EnableBkUpAccess();
+    __HAL_RTC_WRITEPROTECTION_DISABLE(hrtc);
+    RTC_EnterInitMode(hrtc);
+
+    hrtc->Instance->PRER = (uint32_t)(RTC_SYNCH_PREDIV);
+    hrtc->Instance->PRER |= (uint32_t)(RTC_ASYNCH_PREDIV << 16); 
+
+    memset(&sTime, 0, sizeof(sTime));
+    memset(&sDate, 0, sizeof(sDate));
+
+    sTime.Hours = 0x0;
+    sTime.Minutes = 0x0;
+    sTime.Seconds = 0x0;
+    sTime.TimeFormat = RTC_HOURFORMAT12_AM;
+    sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+    sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+
+    sDate.Year = 0x18;
+    sDate.Month = 0x6;
+    sDate.Date = 0x25;
+    sDate.WeekDay = 0x2;
+
+    uint32_t datetmpreg = (((uint32_t)RTC_ByteToBcd2(sDate.Year) << 16) | \
+        ((uint32_t)RTC_ByteToBcd2(sDate.Month) << 8) | \
+        ((uint32_t)RTC_ByteToBcd2(sDate.Date)) | \
+        ((uint32_t)sDate.WeekDay << 13));
+
+    hrtc->Instance->DR = (uint32_t)(datetmpreg & RTC_DR_RESERVED_MASK);
+
+    uint32_t tmpreg = (uint32_t)(((uint32_t)RTC_ByteToBcd2(sTime.Hours) << 16) | \
+        ((uint32_t)RTC_ByteToBcd2(sTime.Minutes) << 8) | \
+        ((uint32_t)RTC_ByteToBcd2(sTime.Seconds)) | \
+        (((uint32_t)sTime.TimeFormat) << 16));
+
+    hrtc->Instance->TR = (uint32_t)(tmpreg & RTC_TR_RESERVED_MASK);
+
+    hrtc->Instance->SSR = RTC_SYNCH_PREDIV;
+
+    /* Exit init mode */
+    hrtc->Instance->ISR &= (uint32_t)~RTC_ISR_INIT;
+
+    HAL_RTC_WaitForSynchro(hrtc);
+    __HAL_RTC_WRITEPROTECTION_ENABLE(hrtc);
+    HAL_PWR_DisableBkUpAccess();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -288,6 +308,7 @@ soc_rtc_init(void)
 
 void soc_rtc_schedule_one_shot(uint8_t channel, rtimer_clock_t t)
 {
+    PRINTF("soc-rtc: schedule one-shot @ %u for %d\n", t, channel);
     if ((channel != SOC_RTC_CHANNEL_CLOCK) && (channel != SOC_RTC_CHANNEL_RTIMER)) {
         return;
     }
@@ -301,33 +322,49 @@ void soc_rtc_schedule_one_shot(uint8_t channel, rtimer_clock_t t)
 rtimer_clock_t 
 soc_rtc_get_current_time()
 {
-    RTC_DateTypeDef sdatestructure;
-    RTC_TimeTypeDef stimestructure;
+    RTC_TimeTypeDef sTime;
     rtimer_clock_t time;
 
-    /* Get the RTC current Time */
-    HAL_RTC_GetTime(&RtcHandle, &stimestructure, FORMAT_BIN);
-    HAL_RTC_GetDate(&RtcHandle, &sdatestructure, FORMAT_BIN);
+    RTC_HandleTypeDef *hrtc = &RtcHandle;
+
+    /* Ensure content of shadow registers are synchronized. */
+    while ((hrtc->Instance->ISR & RTC_ISR_RSF) == (uint32_t)RESET);
+
+    sTime.SubSeconds = RTC_SYNCH_PREDIV - (uint32_t)((hrtc->Instance->SSR) & RTC_SSR_SS);
+    uint32_t datetmpreg = (uint32_t)(hrtc->Instance->DR & RTC_DR_RESERVED_MASK);
+    uint32_t tmpreg = (uint32_t)(hrtc->Instance->TR & RTC_TR_RESERVED_MASK);
+
+    /* Not using date - but still need to read the DR register. */
+    (void)datetmpreg;
+
+    /* Fill the structure fields with the read parameters */
+    sTime.Hours = (uint8_t)((tmpreg & (RTC_TR_HT | RTC_TR_HU)) >> 16);
+    sTime.Minutes = (uint8_t)((tmpreg & (RTC_TR_MNT | RTC_TR_MNU)) >> 8);
+    sTime.Seconds = (uint8_t)(tmpreg & (RTC_TR_ST | RTC_TR_SU));
+    sTime.TimeFormat = (uint8_t)((tmpreg & (RTC_TR_PM)) >> 16);
+
+    /* Convert the time structure parameters to Binary format */
+    sTime.Hours = (uint8_t)RTC_Bcd2ToByte(sTime.Hours);
+    sTime.Minutes = (uint8_t)RTC_Bcd2ToByte(sTime.Minutes);
+    sTime.Seconds = (uint8_t)RTC_Bcd2ToByte(sTime.Seconds);
 
     /* This is a global absolute time down to resolution of
      * RTIMER_SECONDS.
      */
     time =
-        (RTC_SYNCH_PREDIV - stimestructure.SubSeconds) + // already in RTIMER_SECOND units
-        (stimestructure.Seconds +
-         stimestructure.Minutes * 60 +
-         stimestructure.Hours * 60 * 60) * RTIMER_SECOND;
+        (sTime.SubSeconds) + /* already in RTIMER_SECOND units */
+        (sTime.Seconds +
+         sTime.Minutes * 60 +
+         sTime.Hours * 60 * 60) * RTIMER_SECOND;
 
-#if SOC_RTC_TEST
+#if DEBUG
 
-    printf("GET TIME: %lu %d %lu %lu:%d:%d:%d %lu\n",
-        (uint32_t)(RtcHandle.Instance->SSR),
-        RTC_SYNCH_PREDIV,
-        (RTC_SYNCH_PREDIV - stimestructure.SubSeconds),
-        stimestructure.SubSeconds,
-        stimestructure.Seconds,
-        stimestructure.Minutes,
-        stimestructure.Hours,
+    PRINTF("GET TIME: %08x %lu:%d:%d:%d %lu\n",
+        (uint32_t)(hrtc->Instance->ISR),
+        (uint32_t)sTime.Hours,
+        (uint32_t)sTime.Minutes,
+        (uint32_t)sTime.Seconds,
+        (uint32_t)sTime.SubSeconds,
         (uint32_t)time);
 #endif
 

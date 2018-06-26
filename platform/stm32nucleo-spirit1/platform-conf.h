@@ -78,10 +78,10 @@
 #define CLOCK_CONF_SECOND             128
 /* One tick: 62.5 ms */
 
-#define RTIMER_CLOCK_DIFF(a, b)     ((signed short)((a) - (b)))
+#define RTIMER_CLOCK_DIFF(a, b)     ((int32_t)((a) - (b)))
 /*---------------------------------------------------------------------------*/
-typedef unsigned long clock_time_t;
-typedef unsigned long long rtimer_clock_t;
+typedef uint32_t clock_time_t;
+typedef uint32_t rtimer_clock_t;
 /*---------------------------------------------------------------------------*/
 #define CC_CONF_REGISTER_ARGS          0
 #define CC_CONF_FUNCTION_POINTER_ARGS  1
