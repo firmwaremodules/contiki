@@ -126,12 +126,13 @@ RTC_AlarmConfig(uint32_t channel, rtimer_clock_t time)
         (uint32_t)salarmstructure.AlarmTime.Minutes,
         (uint32_t)salarmstructure.AlarmTime.Seconds,
         (uint32_t)salarmstructure.AlarmTime.SubSeconds);
-
+    HAL_PWR_EnableBkUpAccess();
     if (HAL_RTC_SetAlarm_IT(&RtcHandle, &salarmstructure, FORMAT_BIN) != HAL_OK)
     {
         /* Initialization Error */
         Error_Handler();
     }
+    HAL_PWR_DisableBkUpAccess();
 }
 
 
